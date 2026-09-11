@@ -5,6 +5,12 @@
         "buildType": "apk"
       },
       "channel": "apk"
+    },
+    "aab": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "channel": "aab"
     }
   }
 }

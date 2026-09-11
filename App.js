@@ -1,49 +1,71 @@
-import { useEffect, useRef, useState } from 'react';
-import { WebView } from 'react-native-webview';
-import { StyleSheet, BackHandler } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { BackHandler, StyleSheet, View } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { WebView } from "react-native-webview";
 
 export default function App() {
-  const webViewRef = useRef();
+  const webViewRef = useRef(null);
   const [canGoBack, setCanGoBack] = useState(false);
 
-  const handleBackButtonPress = () => {
+  const handleBackButtonPress = useCallback(() => {
     if (canGoBack && webViewRef.current) {
       webViewRef.current.goBack();
-    } else {
-      BackHandler.exitApp();
+      return true;
     }
-    return true;
-  };
 
-  useEffect(() => {
-    BackHandler.addEventListener("hardwareBackPress", handleBackButtonPress);
-    return () => {
-      BackHandler.removeEventListener("hardwareBackPress", handleBackButtonPress);
-    };
+    return false;
   }, [canGoBack]);
 
+  const handleNavigationStateChange = useCallback((navState) => {
+    setCanGoBack(navState.canGoBack);
+  }, []);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      handleBackButtonPress,
+    );
+
+    return () => subscription.remove();
+  }, [handleBackButtonPress]);
+
   return (
-    <WebView
-      style={styles.container}
-      source={{ uri: 'https://mobile.retangulo.org' }}
-      ref={webViewRef}
-      cacheEnabled={true}
-      thirdPartyCookiesEnabled
-      sharedCookiesEnabled
-      cacheMode={'LOAD_CACHE_ELSE_NETWORK'}
-      automaticallyAdjustContentInsets={true}
-      javaScriptEnabled={true}
-      androidLayerType="hardware"
-      scrollEnabled
-      setBuiltInZoomControls={false}
-      domStorageEnabled={true} 
-      onNavigationStateChange={(navState) => setCanGoBack(navState.canGoBack)}
-    />
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <View style={styles.container}>
+          <WebView
+            ref={webViewRef}
+            source={{ uri: "https://mobile.retangulo.org" }}
+            style={styles.webview}
+            cacheEnabled={true}
+            thirdPartyCookiesEnabled
+            sharedCookiesEnabled
+            cacheMode="LOAD_CACHE_ELSE_NETWORK"
+            automaticallyAdjustContentInsets={true}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            androidLayerType="hardware"
+            scrollEnabled
+            setBuiltInZoomControls={false}
+            onNavigationStateChange={handleNavigationStateChange}
+          />
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#2563EB",
+  },
   container: {
     flex: 1,
+    backgroundColor: "#2563EB",
+  },
+  webview: {
+    flex: 1,
+    backgroundColor: "#2563EB",
   },
 });
